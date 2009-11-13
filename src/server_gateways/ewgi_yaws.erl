@@ -23,9 +23,15 @@
 %%%
 %%% Created : 12 Oct 2007 by Filippo Pacini <filippo.pacini@gmail.com>
 %%%-------------------------------------------------------------------
--module(ewgi_yaws, [Appl]).
+-module(ewgi_yaws).
 
--export([run/1]).
+-export([run/2]).
+-export([
+	 stream_process_deliver/2,
+	 stream_process_deliver_chunk/2,
+	 stream_process_deliver_final_chunk/2,
+	 stream_process_end/2
+	]).
 
 -include_lib("yaws_api.hrl").
 -include_lib("ewgi.hrl").
@@ -36,13 +42,13 @@
 %%====================================================================
 %% ewgi_server callbacks
 %%====================================================================
-run(Arg) ->
+run(Appl, Arg) ->
     try parse_arg(Arg) of
         Req when ?IS_EWGI_REQUEST(Req) ->
             Ctx0 = ewgi_api:context(Req, ewgi_api:empty_response()),
             try Appl(Ctx0) of
                 Ctx when ?IS_EWGI_CONTEXT(Ctx) ->
-                    handle_result(?INSPECT_EWGI_RESPONSE(Ctx))
+                    handle_result(?INSPECT_EWGI_RESPONSE(Ctx), Arg#arg.clisock)
             catch
                 _:Reason ->
                     error_logger:error_report(Reason),
@@ -54,18 +60,37 @@ run(Arg) ->
             ?BAD_REQUEST
     end.
 
-handle_result(Ctx) ->
-    {Code, _} = ewgi_api:response_status(Ctx),
-    H = ewgi_api:response_headers(Ctx),
-    ContentType = get_content_type(H),
-    Acc = get_yaws_headers(H),
+handle_result(Ctx, Socket) ->
     case ewgi_api:response_message_body(Ctx) of
-	Generator when is_function(Generator, 0) ->
-	    YawsPid = self(),
-	    spawn(fun() -> handle_stream(Generator, YawsPid) end),
-	    {streamcontent_with_timeout, ContentType, <<>>, infinity};
+	{push_stream, GeneratorPid, Timeout} when is_pid(GeneratorPid) ->
+	    GeneratorPid ! {push_stream_init, ?MODULE, self(), Socket},
+	    receive
+		{push_stream_init, GeneratorPid, Code, Headers, _TransferEncoding} ->
+		    ContentType = get_content_type(Headers),
+		    Acc = get_yaws_headers(Headers),
+		    [{status, Code},
+		     {allheaders, Acc},
+		     {streamcontent_from_pid, ContentType, GeneratorPid}]
+	    after Timeout ->
+		    [{status, 504}, {content, "text/plain", <<"Gateway Timeout">>}]
+	    end;
 	Body ->
-	    [{status, Code}, {content, ContentType, Body}|Acc]
+	    {Code, _} = ewgi_api:response_status(Ctx),
+	    H = ewgi_api:response_headers(Ctx),
+	    ContentType = get_content_type(H),
+	    Acc = get_yaws_headers(H),
+	    case Body of
+		Generator when is_function(Generator, 0) ->
+		    YawsPid = self(),
+		    spawn(fun() -> handle_stream(Generator, YawsPid) end),
+		    [{status, Code},
+		     {allheaders, Acc},
+		     {streamcontent_with_timeout, ContentType, <<>>, infinity}];
+		_ ->
+		    [{status, Code},
+		     {allheaders, Acc},
+		     {content, ContentType, Body}]
+	    end
     end.
 
 get_yaws_headers(H) ->
@@ -108,6 +133,20 @@ handle_stream(Generator, YawsPid) ->
     error_logger:error_report(io_lib:format("Invalid stream generator: ~p~n", [Generator])),
     yaws_api:stream_chunk_end(YawsPid).
 
+%%--------------------------------------------------------------------
+%% Push Streams API
+%%--------------------------------------------------------------------
+stream_process_deliver(Socket, IoList) ->
+	yaws_api:stream_process_deliver(Socket, IoList).
+
+stream_process_deliver_chunk(Socket, IoList) ->
+	yaws_api:stream_process_deliver_chunk(Socket, IoList).
+
+stream_process_deliver_final_chunk(Socket, IoList) ->
+	yaws_api:stream_process_deliver_final_chunk(Socket, IoList).
+
+stream_process_end(Socket, ServerPid) ->
+    yaws_api:stream_process_end(Socket, ServerPid).
 
 %%--------------------------------------------------------------------
 %%% Internal functions

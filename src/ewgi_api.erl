@@ -61,8 +61,18 @@
 -export([server_request_foldl/4]).
 
 %% Utility methods
--export([parse_qs/1, parse_post/1, parse_post/2, urlencode/1, quote/1,
-         normalize_header/1, unquote_path/1, path_components/3, urlsplit/1]).
+-export([parse_qs/1, parse_post/1, urlencode/1, quote/1, normalize_header/1,
+         unquote_path/1, path_components/3, urlsplit/1]).
+
+%% Stream methods
+-export([
+	 stream_process_init/2,
+	 stream_process_init/3,
+	 stream_process_deliver/2,
+	 stream_process_deliver_chunk/2,
+	 stream_process_deliver_final_chunk/2,
+	 stream_process_end/1
+	]).
 
 %%====================================================================
 %% API
@@ -454,17 +464,7 @@ parse_qs(ToParse) ->
 %% @end
 %%--------------------------------------------------------------------
 parse_post(ToParse) ->
-    parse_data(ToParse, "ISO-8859-1").
-
-%%--------------------------------------------------------------------
-%% @spec parse_post(string()|binary(), InEncoding) -> [proplist()]
-%%
-%% @doc Parse application/x-www-form-urlencoded data. 
-%% Calls parse_data to do the job.
-%% @end
-%%--------------------------------------------------------------------
-parse_post(ToParse, InEncoding) ->
-    parse_data(ToParse, InEncoding).
+    parse_data(ToParse).
 
 %%--------------------------------------------------------------------
 %% @spec parse_data(string()|binary()) -> [proplist()]
@@ -472,25 +472,18 @@ parse_post(ToParse, InEncoding) ->
 %% @doc Parse a query string or application/x-www-form-urlencoded data.
 %% @end
 %%--------------------------------------------------------------------
-parse_data(undefined, _InEncoding) ->
+parse_data(undefined) ->
     [];
-parse_data(Data, InEncoding) ->
-	UTFData = unicode_data(Data, string:to_lower(InEncoding)),
-    kv_data(UTFData, []).
+parse_data(Binary) when is_binary(Binary) ->
+    parse_data(binary_to_list(Binary), []);
+parse_data(String) ->
+    parse_data(String, []).
 
-unicode_data(Data, "iso-8859-1") ->
-	unicode:characters_to_list(Data, latin1);
-unicode_data(Data, "utf8") ->
-	unicode:characters_to_list(Data, utf8);
-unicode_data(Data, "utf-8") ->
-	unicode:characters_to_list(Data, utf8).
-%% TODO: add support for more charsets
-	
-kv_data([], Acc) ->
+parse_data([], Acc) ->
     lists:reverse(Acc);
-kv_data(String, Acc) ->
+parse_data(String, Acc) ->
     {{Key, Val}, Rest} = parse_kv(String),
-    kv_data(Rest, [{Key, Val} | Acc]).
+    parse_data(Rest, [{Key, Val} | Acc]).
 
 
 %%--------------------------------------------------------------------
@@ -864,3 +857,62 @@ urlsplit_query("#" ++ Rest, Acc) ->
     {lists:reverse(Acc), Rest};
 urlsplit_query([C | Rest], Acc) ->
     urlsplit_query(Rest, [C | Acc]).
+
+%%--------------------------------------------------------------------
+%% Stream methods
+%%--------------------------------------------------------------------
+%% chunked response
+stream_process_init(Ctx, chunked) when ?IS_EWGI_CONTEXT(Ctx) ->
+    {StatusCode, _} = ewgi_api:response_status(Ctx),
+    Headers = ewgi_api:response_headers(Ctx),
+    ChunkedHeader = {"Transfer-Encoding", "chunked"},
+    wait_for_socket(StatusCode, [ChunkedHeader|Headers], chunked);
+
+%% non chunked response
+stream_process_init(Ctx, CL) when ?IS_EWGI_CONTEXT(Ctx), is_integer(CL) ->
+    {StatusCode, _} = ewgi_api:response_status(Ctx),
+    Headers = ewgi_api:response_headers(Ctx),
+    CLHeader = {"Content-Length", integer_to_list(CL)},
+    wait_for_socket(StatusCode, [CLHeader|Headers], non_chunked).
+
+%% This API is for processes that don't have access the original ewgi_context()
+stream_process_init(StatusCode, Headers, chunked) ->
+    ChunkedHeader = {"Transfer-Encoding", "chunked"},
+    wait_for_socket(StatusCode, [ChunkedHeader|Headers], chunked);
+stream_process_init(StatusCode, Headers, CL) when is_integer(CL) ->
+    CLHeader = {"Content-Length", integer_to_list(CL)},
+    wait_for_socket(StatusCode, [CLHeader|Headers], non_chunked).
+
+-define(STREAM_INIT_TIMEOUT, 5000).
+
+wait_for_socket(StatusCode, Headers, TransferEncoding) ->
+    receive
+	{push_stream_init, ServerModule, ServerPid, Socket} ->
+	    ServerPid ! {push_stream_init, self(), StatusCode, Headers, TransferEncoding},
+	    Connection = {ServerModule, ServerPid, Socket},
+	    %% The server should report back on whether we should send data.
+	    %% Sometimes (Method='HEAD') only the headers are sent.
+	    receive
+		{ok, ServerPid} ->
+		    {ok, Connection};
+		{discard, ServerPid} ->
+		    stream_process_end(Connection),
+		    discard
+	    end
+    after ?STREAM_INIT_TIMEOUT ->
+	    error_logger:error_msg(?MODULE_STRING ++": Timeout while trying to init stream process!~n"),
+	    discard
+    end.
+
+stream_process_deliver({ServerModule, _ServerPid, Socket}, IoList) ->
+    ServerModule:stream_process_deliver(Socket, IoList).
+
+stream_process_deliver_chunk({ServerModule, _ServerPid, Socket}, IoList) ->
+    ServerModule:stream_process_deliver_chunk(Socket, IoList).
+
+stream_process_deliver_final_chunk({ServerModule, _ServerPid, Socket}, IoList) ->
+    ServerModule:stream_process_deliver_final_chunk(Socket, IoList).
+
+stream_process_end({ServerModule, ServerPid, Socket}) ->
+    ServerModule:stream_process_end(Socket, ServerPid).
+

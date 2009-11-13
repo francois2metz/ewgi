@@ -23,10 +23,16 @@
 %%%
 %%% Created : 12 Oct 2007 by Filippo Pacini <filippo.pacini@gmail.com>
 %%%-------------------------------------------------------------------
--module(ewgi_mochiweb, [Appl]).
+-module(ewgi_mochiweb).
 
 %% ewgi callbacks
--export([run/1]).
+-export([run/2]).
+-export([
+		stream_process_deliver/2,
+		stream_process_deliver_chunk/2,
+		stream_process_deliver_final_chunk/2,
+		stream_process_end/2
+	]).
 
 -include_lib("ewgi.hrl").
 
@@ -35,10 +41,10 @@
 %%====================================================================
 %% ewgi_server callbacks
 %%====================================================================
-run(MochiReq) ->
+run(Appl, MochiReq) ->
     try parse_arg(MochiReq) of
         Req when ?IS_EWGI_REQUEST(Req) ->
-            try process_application(ewgi_api:context(Req, ewgi_api:empty_response())) of
+            try process_application(Appl, ewgi_api:context(Req, ewgi_api:empty_response())) of
                 not_found ->
                     MochiReq:not_found();
                 Ctx when ?IS_EWGI_CONTEXT(Ctx) ->
@@ -56,10 +62,14 @@ run(MochiReq) ->
 
 %% Chunked response if a nullary function is returned
 handle_result(Ctx, Req) ->
-    {Code, _} = ewgi_api:response_status(Ctx),
-    Headers = ewgi_api:response_headers(Ctx),
-    Body = ewgi_api:response_message_body(Ctx),
-    handle_result1(Code, Headers, Body, Req).
+	case ewgi_api:response_message_body(Ctx) of
+		{push_stream, GeneratorPid, Timeout} when is_pid(GeneratorPid) ->
+			handle_push_stream(Ctx, Req, GeneratorPid, Timeout);
+		Body ->
+			{Code, _} = ewgi_api:response_status(Ctx),
+			Headers = ewgi_api:response_headers(Ctx),
+			handle_result1(Code, Headers, Body, Req)
+	end.
 
 handle_result1(Code, Headers, F, Req) when is_function(F, 0) ->
     MochiResp = Req:respond({Code, Headers, chunked}),
@@ -67,6 +77,34 @@ handle_result1(Code, Headers, F, Req) when is_function(F, 0) ->
     handle_stream(MochiResp, F);
 handle_result1(Code, Headers, L, Req) ->
     Req:respond({Code, Headers, L}).
+
+handle_push_stream(Ctx, Req, GeneratorPid, Timeout) ->
+	Socket = Req:get(socket),
+	GeneratorPid ! {push_stream_init, ?MODULE, self(), Socket},
+	receive
+	{push_stream_init, GeneratorPid, Code, Headers, TransferEncoding} ->
+		case TransferEncoding of
+			chunked ->
+				Req:respond({Code, Headers, chunked}),
+				GeneratorPid ! {ok, self()}
+			;_ ->
+				%% mochiweb_request:respond/1 expects the full body in order to
+				%% count the content-length but we already have that. What we're
+				%% missing is the [to-be-sent] body.
+				HResponse = mochiweb_headers:make(Headers),
+				Req:start_response({Code, HResponse}),
+				%% WARNING: we're depending on the original ewgi_context here!!!!
+				case ewgi_api:request_method(Ctx) of
+					'HEAD' ->
+						GeneratorPid ! {discard, self()};
+					_ ->
+						GeneratorPid ! {ok, self()}
+				end
+		end,
+		wait_for_streamcontent_pid(Socket, GeneratorPid)
+	after Timeout ->
+		Req:respond({504, [], <<"Gateway Timeout">>})
+	end.
 
 %% Treat a stream with chunked transfer encoding
 handle_stream(R, Generator) when is_function(Generator, 0) ->
@@ -90,10 +128,66 @@ handle_stream(R, Generator) ->
     error_logger:error_report(io_lib:format("Invalid stream generator: ~p~n", [Generator])),
     R:write_chunk([]).
 
-process_application(Ctx) when is_list(Appl) ->
+%% Copied/adapted from yaws_server
+wait_for_streamcontent_pid(CliSock, ContentPid) ->
+    Ref = erlang:monitor(process, ContentPid),
+    gen_tcp:controlling_process(CliSock, ContentPid),
+    ContentPid ! {ok, self()},
+    receive
+        endofstreamcontent ->
+	    ok = gen_tcp:close(CliSock),
+            erlang:demonitor(Ref),
+            %% should just use demonitor [flush] option instead?
+            receive
+                {'DOWN', Ref, _, _, _} ->
+                    ok
+            after 0 ->
+                    ok
+            end;
+        {'DOWN', Ref, _, _, _} ->
+            ok
+    end,
+    done.
+
+%%--------------------------------------------------------------------
+%% Push Streams API - copied from yaws_api
+%% We could use mochiweb's write_chunk function but that
+%% would require that we copy MochiResp around instead of
+%% just copying the socket.
+%%--------------------------------------------------------------------
+
+%% This won't work for SSL for now
+stream_process_deliver(Sock, IoList) ->
+    gen_tcp:send(Sock, IoList).
+
+%% This won't work for SSL for now either
+stream_process_deliver_chunk(Sock, IoList) ->
+    Chunk = case erlang:iolist_size(IoList) of
+                0 ->
+                    stream_process_deliver_final_chunk(Sock, IoList);
+                S ->
+                    [mochihex:to_hex(S), "\r\n", IoList, "\r\n"]
+            end,
+    gen_tcp:send(Sock, Chunk).
+stream_process_deliver_final_chunk(Sock, IoList) ->
+    Chunk = case erlang:iolist_size(IoList) of
+                0 ->
+                    <<"0\r\n\r\n">>;
+                S ->
+                    [mochihex:to_hex(S), "\r\n", IoList, "\r\n0\r\n\r\n"]
+            end,
+    gen_tcp:send(Sock, Chunk).
+
+stream_process_end(Sock, ServerPid) ->
+    gen_tcp:controlling_process(Sock, ServerPid),
+    ServerPid ! endofstreamcontent.
+
+%%--------------------------------------------------------------------
+
+process_application(Appl, Ctx) when is_list(Appl) ->
     Path = ewgi_api:path_info(Ctx),
     process_mount_application(Ctx, Path, find_mount(Appl, Path));
-process_application(Ctx) ->
+process_application(Appl, Ctx) ->
     ewgi_application:run(Appl, Ctx).
 
 process_mount_application(_, _, {not_found, _}) ->
@@ -183,15 +277,6 @@ parse_element(remote_ident, _Req) ->
 
 parse_element(remote_user, _Req) ->
     undefined;
-
-parse_element(remote_user_data, Req) ->
-    case Req:get(method) of
-        M when (M=='POST') orelse (M=='PUT') ->
-            Req:recv_body(),
-            erlang:get(mochiweb_request_body);
-        _ ->
-            undefined
-    end;
 
 parse_element(request_method, Req) ->
     Req:get(method);
