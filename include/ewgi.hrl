@@ -80,11 +80,11 @@
           path_info     :: string(),
           query_string  :: string(),
           server_name   :: string(),
-          server_port   :: string(),
-          http_headers  :: gb_tree(),
+          server_port   :: integer(),
+          headers       :: bag(),
           input         :: ewgi_read_input(),
           errors        :: ewgi_write_error(),
-          data          :: gb_tree()
+          data          :: bag()
          }).
 
 %%% Note: Dialyzer currently doesn't support recursive types. When it does, this should change:
