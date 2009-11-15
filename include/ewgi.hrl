@@ -21,6 +21,7 @@
 %                 Hunter Morris <huntermorris@gmail.com>
 
 -define(DEFAULT_CHUNKSIZE, 4096).
+-define(EWGI_VERSION, {3, 0}).
 
 -type ewgi_propval() :: atom() | integer() | string() | binary().
 -type ewgi_prop() :: {ewgi_propval(), ewgi_propval()}.
