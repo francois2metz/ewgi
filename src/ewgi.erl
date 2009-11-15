@@ -34,22 +34,23 @@
 -export([version/1]).
 -export([method/1, method/2]).
 -export([url_scheme/1, url_scheme/2]).
--export([script_name/1]).
+-export([script_name/1, script_name/2]).
 -export([path_info/1, path_info/2]).
 -export([query_string/1, query_string/2]).
 -export([server_name/1, server_name/2]).
 -export([server_port/1, server_port/2]).
 -export([req_headers/1, req_header/2]).
--export([add_req_header/3, get_req_header/2, get_req_header_merged/2]).
+-export([add_req_header/3, get_req_header/2,
+         get_req_header_merged/2]).
 -export([input/1, input/2]).
 -export([errors/1, errors/2]).
 -export([data/1, data/2]).
 
 -export([new_rsp/0]).
 -export([rsp/1, rsp/2]).
--export([status/1]).
+-export([status/1, status/2]).
 -export([rsp_headers/1]).
--export([body/1]).
+-export([body/1, body/2]).
 
 %% ----------------------------------------------------------------------
 %% General context methods
@@ -76,7 +77,7 @@ rsp(#ewgi{rsp=R}) ->
 
 -spec rsp(#ewgi_rsp{}, #ewgi{}) -> #ewgi{}.
 
-rsp(R, E) when is_record(R, ewgi_req), is_record(E, ewgi) ->
+rsp(R, E) when is_record(R, ewgi_rsp), is_record(E, ewgi) ->
     E#ewgi{rsp=R}.
 
 %% ----------------------------------------------------------------------
@@ -127,6 +128,11 @@ url_scheme(Scheme, #ewgi_req{}=R) when is_list(Scheme) ->
 
 script_name(#ewgi_req{script_name=V}) ->
     V.
+
+-spec script_name(string(), #ewgi_req{}) -> #ewgi_req{}.
+
+script_name(Name, #ewgi_req{}=R) when is_list(Name) ->
+    R#ewgi_req{script_name=Name}.
 
 -spec path_info(#ewgi_req{}) -> string().
 
@@ -264,6 +270,12 @@ new_rsp() ->
 status(#ewgi_rsp{status=S}) ->
     S.
 
+-spec status(ewgi_status(), #ewgi_rsp{}) -> #ewgi_rsp{}.
+
+status({Code, Msg}=Status, #ewgi_rsp{}=R)
+  when is_integer(Code), is_list(Msg) ->
+    R#ewgi_rsp{status=Status}.
+
 -spec rsp_headers(#ewgi_rsp{}) -> ewgi_header_list().
 
 rsp_headers(#ewgi_rsp{headers=H}) ->
@@ -273,3 +285,10 @@ rsp_headers(#ewgi_rsp{headers=H}) ->
 
 body(#ewgi_rsp{body=B}) ->
     B.
+
+-spec body(ewgi_message_body(), #ewgi_rsp{}) -> #ewgi_rsp{}.
+
+body(Body, #ewgi_rsp{}=R)
+  when is_list(Body); is_binary(Body); is_function(Body, 0) ->
+    R#ewgi_rsp{body=Body}.
+    
