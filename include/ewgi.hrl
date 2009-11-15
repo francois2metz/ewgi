@@ -113,7 +113,7 @@
          }).
 
 %% @type ewgi_app() = function()
--type ewgi_app() :: fun((ewgi_context()) -> ewgi_context()).
+-type ewgi_app() :: fun((#ewgi{}) -> #ewgi{}).
 
 -ifndef(debug).
 -define(INSPECT_EWGI_RESPONSE(Ctx), Ctx).
