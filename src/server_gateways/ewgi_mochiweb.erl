@@ -33,8 +33,7 @@ rsp(MochiReq, _Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
         F when is_function(F, 0) ->
             % Stream returned, so chunk response
             % XXX: This should only be allowed for HTTP/1.1 requests
-            MochiRsp = MochiReq:respond({Code, Headers, chunked}),
-            rsp_stream(F, MochiRsp);
+            rsp_stream(F, MochiReq:respond({Code, Headers, chunked}));
         Iol ->
             MochiReq:respond({Code, Headers, Iol})
     end.
