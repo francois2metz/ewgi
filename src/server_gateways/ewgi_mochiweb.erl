@@ -24,6 +24,7 @@ req(MochiReq, Opts) ->
                             fun path/3,
                             fun url_scheme/3,
                             fun server_pair/3,
+                            fun peer_pair/3,
                             fun headers/3,
                             fun input/3,
                             fun errors/3]).
@@ -78,6 +79,11 @@ url_scheme(_MochiReq, _Opts, R) ->
 
 server_pair(MochiReq, _Opts, R0) ->
     {Name, Port} = ewgi_util:socket_server_pair(MochiReq:get(socket)),
+    R = ewgi:server_port(Port, R0),
+    ewgi:server_name(Name, R).
+
+peer_pair(MochiReq, _Opts, R0) ->
+    {Name, Port} = ewgi_util:socket_peer_pair(MochiReq:get(socket)),
     R = ewgi:server_port(Port, R0),
     ewgi:server_name(Name, R).
 
