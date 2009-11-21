@@ -31,10 +31,13 @@ req(MochiReq, Opts) ->
 
 -spec rsp(MochiReq::tuple(), Opts::list(), Rsp::#ewgi_rsp{}) -> 'ok' | {'error', any()}.
 
-rsp(MochiReq, _Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
+rsp(MochiReq, Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
     {Code, _Msg} = ewgi:status(Rsp),
     Headers = ewgi:rsp_headers(Rsp),
     case ewgi:body(Rsp) of
+        {file, Path} when is_list(Path) ->
+            DocRoot = proplists:get_value(docroot, Opts, []),
+            MochiReq:serve_file(Path, DocRoot, Headers);
         F when is_function(F, 0) ->
             % Stream returned, so chunk response
             % XXX: This should only be allowed for HTTP/1.1 requests

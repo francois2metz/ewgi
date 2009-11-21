@@ -64,8 +64,8 @@
 %% @type ewgi_status() = {integer(), string()}
 -type ewgi_status() :: {integer(), string()}.
 
-%% @type ewgi_message_body() = binary() | iolist() | stream()
--type ewgi_message_body() :: binary() | iolist() | stream().
+%% @type ewgi_message_body() = binary() | iolist() | stream() | {'file', string()}
+-type ewgi_message_body() :: binary() | iolist() | stream() | {'file', string()}.
 
 %% @type ewgi_header_list() = [{ewgi_header_key(), ewgi_header_val()}]
 -type ewgi_header_list() :: [{ewgi_header_key(), ewgi_header_val()}].
