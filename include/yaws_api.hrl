@@ -32,7 +32,7 @@
           prepath,        %% Path prior to 'dynamic' segment of URI. 
                           %%  ie http://some.host/<prepath>/<script-point>/d/e 
                           %% where <script-point> is an appmod mount point, 
-                          %% or .yaws,.php,.cgi etc script file.
+                          %% or .yaws,.php,.cgi,.fcgi etc script file.
           pathinfo        %% Set to '/d/e' when calling c.yaws for the request 
                           %% http://some.host/a/b/c.yaws/d/e
                           %%  equiv of cgi PATH_INFO
@@ -75,8 +75,8 @@
 
 
 -record(url,
-        {scheme,
-         host, 
+        {scheme,          %% undefined means not set
+         host,            %% undefined means not set
          port,            %% undefined means not set
          path = [],
          querypart = []}).
