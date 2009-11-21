@@ -77,9 +77,7 @@ url_scheme(_MochiReq, _Opts, R) ->
     ewgi:url_scheme("http", R).
 
 server_pair(MochiReq, _Opts, R0) ->
-    Socket = MochiReq:get(socket),
-    {ok, {Addr, Port}} = inet:sockname(Socket),
-    Name = inet_parse:ntoa(Addr),
+    {Name, Port} = ewgi_util:socket_server_pair(MochiReq:get(socket)),
     R = ewgi:server_port(Port, R0),
     ewgi:server_name(Name, R).
 
