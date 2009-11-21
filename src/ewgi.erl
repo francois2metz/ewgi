@@ -1,28 +1,11 @@
-%%%-------------------------------------------------------------------
-%%% File    : ewgi.erl
-%%% Authors : Filippo Pacini <filippo.pacini@gmail.com>
-%%%           Hunter Morris <huntermorris@gmail.com>
-%%% License :
-%%% The contents of this file are subject to the Mozilla Public
-%%% License Version 1.1 (the "License"); you may not use this file
-%%% except in compliance with the License. You may obtain a copy of
-%%% the License at http://www.mozilla.org/MPL/
-%%%
-%%% Software distributed under the License is distributed on an "AS IS"
-%%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-%%% the License for the specific language governing rights and
-%%% limitations under the License.
-%%% The Initial Developer of the Original Code is S.G. Consulting
-%%% srl. Portions created by S.G. Consulting s.r.l. are Copyright (C)
-%%% 2007 S.G. Consulting srl. All Rights Reserved.
-%%%
-%%% @doc 
-%%% <p>ewgi API. Defines a low level CGI like API.</p>
-%%%
-%%% @end
-%%%
-%%% Created : 13 Nov 2009 by Hunter Morris <huntermorris@gmail.com>
-%%%-------------------------------------------------------------------
+%%%----------------------------------------------------------------------
+%% @copyright Hunter Morris
+%% @author Hunter Morris <huntermorris@gmail.com>
+%% @version {@vsn}, {@date}, {@time}
+%% @doc ewgi API
+%%
+%% See LICENSE file in this source package
+%%%----------------------------------------------------------------------
 -module(ewgi).
 
 -include_lib("ewgi.hrl").
@@ -39,6 +22,8 @@
 -export([query_string/1, query_string/2]).
 -export([server_name/1, server_name/2]).
 -export([server_port/1, server_port/2]).
+-export([peer_name/1, peer_name/2]).
+-export([peer_port/1, peer_port/2]).
 -export([req_headers/1, req_header/2]).
 -export([add_req_header/3, get_req_header/2,
          get_req_header_merged/2]).
@@ -173,6 +158,26 @@ server_port(#ewgi_req{server_port=V}) ->
 
 server_port(Port, #ewgi_req{}=R) when is_integer(Port) ->
     R#ewgi_req{server_port=Port}.
+
+-spec peer_name(#ewgi_req{}) -> string().
+
+peer_name(#ewgi_req{peer_name=V}) ->
+    V.
+
+-spec peer_name(string(), #ewgi_req{}) -> #ewgi_req{}.
+
+peer_name(Name, #ewgi_req{}=R) when is_list(Name) ->
+    R#ewgi_req{peer_name=Name}.
+
+-spec peer_port(#ewgi_req{}) -> integer().
+
+peer_port(#ewgi_req{peer_port=V}) ->
+    V.
+
+-spec peer_port(integer(), #ewgi_req{}) -> #ewgi_req{}.
+
+peer_port(Port, #ewgi_req{}=R) when is_integer(Port) ->
+    R#ewgi_req{peer_port=Port}.
 
 -spec req_headers(#ewgi_req{}) -> bag().
 

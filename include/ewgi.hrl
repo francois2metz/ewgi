@@ -81,6 +81,8 @@
           query_string  :: string(),
           server_name   :: string(),
           server_port   :: integer(),
+          peer_name     :: string(),
+          peer_port     :: integer(),
           headers       :: bag(),
           input         :: ewgi_read_input(),
           errors        :: ewgi_write_error(),
