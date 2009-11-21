@@ -1,27 +1,12 @@
-%%%-------------------------------------------------------------------
-%%% File    : ewgi_inets.erl
-%%% Author  : Hunter Morris <huntermorris@gmail.com>
-%%% License :
-%%% The contents of this file are subject to the Mozilla Public
-%%% License Version 1.1 (the "License"); you may not use this file
-%%% except in compliance with the License. You may obtain a copy of
-%%% the License at http://www.mozilla.org/MPL/
-%%%
-%%% Software distributed under the License is distributed on an "AS IS"
-%%% basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
-%%% the License for the specific language governing rights and
-%%% limitations under the License.
-%%% The Initial Developer of the Original Code is S.G. Consulting
-%%% srl. Portions created by S.G. Consulting s.r.l. are Copyright (C)
-%%% 2007 S.G. Consulting srl. All Rights Reserved.
-%%%
-%%% @doc 
-%%% <p>Reference implementation of a inets EWGI server gateway.</p>
-%%% <p>Requires that environment variables 'app_module' and
-%%% 'app_function' are set for application 'ewgi'</p>
-%%%
-%%% @end
-%%%-------------------------------------------------------------------
+%%%----------------------------------------------------------------------
+%% @copyright Hunter Morris
+%% @author Hunter Morris <huntermorris@gmail.com>
+%% @version {@vsn}, {@date}, {@time}
+%% @doc ewgi inets server gateway
+%%
+%% See LICENSE file in this source package
+%%%----------------------------------------------------------------------
+
 -module(ewgi_inets).
 
 %% ewgi callbacks
