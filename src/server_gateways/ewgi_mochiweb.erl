@@ -14,6 +14,8 @@
 
 -include("ewgi.hrl").
 
+-spec req(MochiReq::tuple(), Opts::list()) -> #ewgi_req{}.
+    
 req(MochiReq, Opts) ->
     R = ewgi:new_req(),
     Folder = fun(F, Req) -> F(MochiReq, Opts, Req) end,
@@ -25,6 +27,8 @@ req(MochiReq, Opts) ->
                             fun headers/3,
                             fun input/3,
                             fun errors/3]).
+
+-spec rsp(MochiReq::tuple(), Opts::list(), Rsp::#ewgi_rsp{}) -> 'ok' | {'error', any()}.
 
 rsp(MochiReq, _Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
     {Code, _Msg} = ewgi:status(Rsp),
