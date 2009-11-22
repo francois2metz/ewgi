@@ -1,22 +1,22 @@
-%% @author Hunter Morris <hunter.morris@smarkets.com>
-%% @copyright 2009 Smarkets Limited.
+%%%----------------------------------------------------------------------
+%% @copyright Hunter Morris
+%% @author Hunter Morris <huntermorris@gmail.com>
+%% @version {@vsn}, {@date}, {@time}
+%% @doc HTML utility methods
 %%
-%% @doc Smak HTML utility methods.
-%% @end
+%% See LICENSE file in this source package
 %%
-%% Licensed under the MIT license:
-%% http://www.opensource.org/licenses/mit-license.php
-%%
-%% Some code is based on the Python Paste Project which is copyright Ian
-%% Bicking, Clark C. Evans, and contributors and released under the MIT
-%% license. See: http://pythonpaste.org/
+%% Some code (including parse_cookie/1) taken from MochiWeb:
+%% Emad El-Haraty <emad@mochimedia.com>
+%% Copyright 2007 Mochi Media, Inc.
+%%%----------------------------------------------------------------------
 
 -module(ewgi_util_html).
 -author('Hunter Morris <hunter.morris@smarkets.com>').
 
 -export([escape/1]).
 
--include("ewgi.hrl").
+-define(QUOTE, 34).
 
 %% @spec escape(binary() | string()) -> binary() | string()
 %% @doc Replace the special characters '&lt;', '&gt;', '&amp;', and '&quot;'
@@ -38,7 +38,7 @@ escape([$>|Rest], Acc) ->
     escape(Rest, lists:reverse("&gt;", Acc));
 escape([$&|Rest], Acc) ->
     escape(Rest, lists:reverse("&amp;", Acc));
-escape([$\"|Rest], Acc) ->
+escape([?QUOTE|Rest], Acc) ->
     escape(Rest, lists:reverse("&quot;", Acc));
 escape([C|Rest], Acc) ->
     escape(Rest, [C|Acc]).

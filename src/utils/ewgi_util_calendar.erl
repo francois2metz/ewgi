@@ -1,22 +1,16 @@
-%% @author Hunter Morris <hunter.morris@smarkets.com>
-%% @copyright 2009 Smarkets Limited.
+%%%----------------------------------------------------------------------
+%% @copyright Hunter Morris
+%% @author Hunter Morris <huntermorris@gmail.com>
+%% @version {@vsn}, {@date}, {@time}
+%% @doc ewgi date/time helpers
 %%
-%% @doc Smak date/time methods.
-%% @end
-%%
-%% Licensed under the MIT license:
-%% http://www.opensource.org/licenses/mit-license.php
-%%
-%% Some code is based on the Python Paste Project which is copyright Ian
-%% Bicking, Clark C. Evans, and contributors and released under the MIT
-%% license. See: http://pythonpaste.org/
+%% See LICENSE file in this source package
+%%%----------------------------------------------------------------------
 
 -module(ewgi_util_calendar).
 -author('Hunter Morris <hunter.morris@smarkets.com>').
 
 -define(UNIX_EPOCH, {{1970,1,1},{0,0,0}}).
-
--include("ewgi.hrl").
 
 -export([now_to_unix_ts/0, now_to_unix_ts/1, now_to_unix_ts/2, now_utc_ms/0, now_utc_ts_ms/0]).
 

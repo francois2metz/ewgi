@@ -1,11 +1,12 @@
-%% @author Hunter Morris <hunter.morris@smarkets.com>
+%%%----------------------------------------------------------------------
+%% @copyright Hunter Morris
+%% @author Hunter Morris <huntermorris@gmail.com>
 %% @author Davide Marquês <nesrait@gmail.com>
-%% @copyright 2009 Smarkets Limited.
-%%
+%% @version {@vsn}, {@date}, {@time}
 %% @doc Secure data transformations for data storage in unsecure locations.
 %% Based on smak_sn_cookie by Hunter Morris.
 %% Differences from smak_sn_cookie: removed the timestamping operation on
-%% data encoding and and the timeout validation on decoding data.
+%% data encoding and the timeout validation on decoding data.
 %%
 %% The binary data is first compressed, then encrypted using AES in CFB mode
 %% with a random initialization vector. After that the data is signed
@@ -16,8 +17,8 @@
 %%
 %% @end
 %%
-%% Licensed under the MIT license:
-%% http://www.opensource.org/licenses/mit-license.php
+%% See LICENSE file in this source package
+%%%----------------------------------------------------------------------
 
 -module(ewgi_util_crypto).
 -author('Hunter Morris <hunter.morris@smarkets.com>').

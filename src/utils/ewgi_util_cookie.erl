@@ -1,15 +1,15 @@
-%% @author Emad El-Haraty <emad@mochimedia.com>
-%% @copyright 2007 Mochi Media, Inc.
-%%
-%% @author Hunter Morris <hunter.morris@smarkets.com>
-%% @copyright 2009 Smarkets Limited.
-%%
-%% Licensed under the MIT license:
-%% http://www.opensource.org/licenses/mit-license.php
-
+%%%----------------------------------------------------------------------
+%% @copyright Hunter Morris
+%% @author Hunter Morris <huntermorris@gmail.com>
+%% @version {@vsn}, {@date}, {@time}
 %% @doc HTTP Cookie parsing (RFC 2109, RFC 2965)
-%% - parse_cookie/1 shamelessly ripped off mochiweb.
-%% - simple_cookie/[3,4] moved off smak_auth_cookie.
+%%
+%% See LICENSE file in this source package
+%%
+%% Some code (including parse_cookie/1) taken from MochiWeb:
+%% Emad El-Haraty <emad@mochimedia.com>
+%% Copyright 2007 Mochi Media, Inc.
+%%%----------------------------------------------------------------------
 
 -module(ewgi_util_cookie).
 -export([parse_cookie/1, test/0]).
@@ -17,7 +17,7 @@
 
 -include("ewgi.hrl").
 
--define(QUOTE, $\").
+-define(QUOTE, 34). % avoid annoying syntax highlighting issues
 
 -define(IS_WHITESPACE(C),
         (C =:= $\s orelse C =:= $\t orelse C =:= $\r orelse C =:= $\n)).
@@ -28,7 +28,7 @@
          C =:= $\s orelse C =:= $\t orelse
          C =:= $( orelse C =:= $) orelse C =:= $< orelse C =:= $> orelse
          C =:= $@ orelse C =:= $, orelse C =:= $; orelse C =:= $: orelse
-         C =:= $\\ orelse C =:= $\" orelse C =:= $/ orelse
+         C =:= $\\ orelse C =:= ?QUOTE orelse C =:= $/ orelse
          C =:= $[ orelse C =:= $] orelse C =:= $? orelse C =:= $= orelse
          C =:= ${ orelse C =:= $})).
 
@@ -55,9 +55,9 @@ parse_cookie([], Acc) ->
 parse_cookie(String, Acc) -> 
     {{Token, Value}, Rest} = read_pair(String),
     Acc1 = case Token of
-               "" ->
+               [] ->
                    Acc;
-               "$" ++ _ ->
+               [$$] ++ _ ->
                    Acc;
                _ ->
                    [{Token, Value} | Acc]
