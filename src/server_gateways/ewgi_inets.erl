@@ -15,7 +15,7 @@
 -include("inets/src/httpd.hrl").
 -include("ewgi.hrl").
 
-req(Arg, Opts) when is_record(Arg, mod) ->
+req(#mod{}=Arg, Opts) ->
     R = ewgi:new_req(),
     Folder = fun(F, Req) -> F(Arg, Opts, Req) end,
     lists:foldl(Folder, R, [fun method/3,
@@ -28,7 +28,69 @@ req(Arg, Opts) when is_record(Arg, mod) ->
                             fun input/3,
                             fun errors/3]).
 
-rsp(Arg, _Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
+rsp(#mod{}=Arg, _Opts, #ewgi_rsp{}=Rsp) ->
+    {Code, _Msg} = ewgi:status(Rsp),
+    HeaderList = ewgi:rsp_headers(Rsp),
+    case ewgi:body(Rsp) of
+        {file, _Path} ->
+            % TODO: Check path
+            mod_get:do(Arg);
+        F when is_function(F, 0) ->
+            rsp_stream(F, Arg, Rsp);
+        Iol ->
+            Size = integer_to_list(httpd_util:flatlength(Iol)),
+            Headers0 = [{code, Code}, {content_length, Size}],
+            Headers = lists:foldl(fun rsp_headers/2, Headers0,
+                                  HeaderList),
+            {break, [{response, {response, Headers, Iol}}]}
+    end.
+
+rsp_headers({"accept-ranges", V}, L) ->
+    [{accept_ranges, V}|L];
+rsp_headers({"allow", V}, L) ->
+    [{allow, V}|L];
+rsp_headers({"cache-control", V}, L) ->
+    [{cache_control, V}|L];
+rsp_headers({"content-MD5", V}, L) ->
+    [{content_MD5, V}|L];
+rsp_headers({"content-encoding", V}, L) ->
+    [{content_encoding, V}|L];
+rsp_headers({"content-language", V}, L) ->
+    [{content_language, V}|L];
+rsp_headers({"content-length", _V}, L) ->
+    % [{content_length, V}|L];
+    L;
+rsp_headers({"content-location", V}, L) ->
+    [{content_location, V}|L];
+rsp_headers({"content-range", V}, L) ->
+    [{content_range, V}|L];
+rsp_headers({"content-type", V}, L) ->
+    [{content_type, V}|L];
+rsp_headers({"date", V}, L) ->
+    [{date, V}|L];
+rsp_headers({"etag", V}, L) ->
+    [{etag, V}|L];
+rsp_headers({"expires", V}, L) ->
+    [{expires, V}|L];
+rsp_headers({"last-modified", V}, L) ->
+    [{last_modified, V}|L];
+rsp_headers({"location", V}, L) ->
+    [{location, V}|L];
+rsp_headers({"pragma", V}, L) ->
+    [{pragma, V}|L];
+rsp_headers({"retry-after", V}, L) ->
+    [{retry_after, V}|L];
+rsp_headers({"server", V}, L) ->
+    [{server, V}|L];
+rsp_headers({"trailer", V}, L) ->
+    [{trailer, V}|L];
+rsp_headers({"transfer-encoding", V}, L) ->
+    [{transfer_encoding, V}|L];
+rsp_headers({Header, Val}, L) when is_list(Header), is_list(Val) ->
+    % TODO: Check unknown/unused header values?
+    [{Header, Val}|L].
+
+rsp_stream(_F, _Arg, _Rsp) ->
     ok.
 
 method(#mod{method=M}, _Opts, R0) ->
