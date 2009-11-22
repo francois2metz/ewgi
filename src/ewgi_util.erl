@@ -12,6 +12,7 @@
 -export([list_to_method/1]).
 -export([socket_server_pair/1, socket_peer_pair/1]).
 -export([ssl_server_pair/1, ssl_peer_pair/1]).
+-export([read_bin_input/1]).
 
 -spec list_to_method(Method::string()) -> ewgi_request_method().
 
@@ -61,3 +62,24 @@ ssl_peer_pair(Ssl) ->
     {ok, {Addr, Port}} = inet:peername(Ssl),
     Name = inet_parse:ntoa(Addr),
     {Name, Port}.
+
+-spec read_bin_input(Body::binary()) -> ewgi_read_input().
+
+read_bin_input(Body) when is_binary(Body) ->
+    fun(Callback, Length) ->
+            read_bin_input(Body, Callback, Length)
+    end.
+
+read_bin_input(_Body, Callback, {Length, _ChunkSz})
+  when is_function(Callback, 1), Length =< 0 ->
+    Callback(eof);
+
+read_bin_input(Body, Callback, {Length, ChunkSz})
+  when is_function(Callback, 1), is_binary(Body) ->
+    L = if Length > 0, Length < ChunkSz -> Length;
+           true -> ChunkSz
+        end,
+    <<Bin:L/bytes, Rest/bits>> = Body,
+    Rem = Length - size(Bin),
+    Callback1 = Callback({data, Bin}),
+    read_bin_input(Rest, Callback1, {Rem, ChunkSz}).

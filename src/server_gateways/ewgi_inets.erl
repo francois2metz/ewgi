@@ -79,24 +79,8 @@ headers(#mod{parsed_header=H}, _Opts, R0) ->
                 end, R0, H).
 
 input(#mod{entity_body=Body}, _Opts, R0) ->
-    F = fun(Callback, Length) ->
-                input1(Body, Callback, Length)
-        end,
+    F = ewgi_util:read_bin_input(Body),
     ewgi:input(F, R0).
-
-input1(_Body, Callback, {Length, _ChunkSz})
-  when is_function(Callback, 1), Length =< 0 ->
-    Callback(eof);
-
-input1(Body, Callback, {Length, ChunkSz})
-  when is_function(Callback, 1), is_binary(Body) ->
-    L = if Length > 0, Length < ChunkSz -> Length;
-           true -> ChunkSz
-        end,
-    <<Bin:L/bytes, Rest/bits>> = Body,
-    Rem = Length - size(Bin),
-    Callback1 = Callback({data, Bin}),
-    input1(Rest, Callback1, {Rem, ChunkSz}).
 
 errors(#mod{}, _Opts, R0) ->
     ewgi:errors(fun error_logger:error_report/1, R0).
