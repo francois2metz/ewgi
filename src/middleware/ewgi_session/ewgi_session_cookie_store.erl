@@ -30,7 +30,7 @@
 %%====================================================================
 %% Session Store API
 %%====================================================================
--spec load_session(ewgi_context(), list()) -> ewgi_context().
+-spec load_session(#ewgi{}, list()) -> #ewgi{}.
 load_session(Ctx, [CookieName, _CookiePath, _SecureCookie, Timeout, IncludeIp, Key]=Args) ->
     case ewgi_api:get_header_value("cookie", Ctx) of
 	undefined ->
@@ -58,7 +58,7 @@ load_session(Ctx, [CookieName, _CookiePath, _SecureCookie, Timeout, IncludeIp, K
 	    end
     end.
 
--spec store_session(ewgi_context(), list()) -> ewgi_context().
+-spec store_session(#ewgi{}, list()) -> #ewgi{}.
 store_session(Ctx, [CookieName, CookiePath, SecureCookie, _Timeout, IncludeIp, Key]) ->
     Updated = ewgi_session:session_updated(Ctx),
     if Updated ->

@@ -141,7 +141,7 @@ cookie_headers(Ctx, CookieName, CookieVal, Path, Sec) ->
     Headers = SessionHeaders ++ remove_cookie_headers(CookieName, OldHeaders, []),
     ewgi_api:response_headers(Headers, Ctx).
 
--spec get_domains(ewgi_context()) -> {string(), string()}.
+-spec get_domains(#ewgi{}) -> {string(), string()}.
 get_domains(Ctx) ->
     Cur = case ewgi_api:get_header_value("host", Ctx) of
               undefined ->
