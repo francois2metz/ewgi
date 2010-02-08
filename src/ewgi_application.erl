@@ -16,7 +16,7 @@
 %%% srl. Portions created by S.G. Consulting s.r.l. are Copyright (C)
 %%% 2007 S.G. Consulting srl. All Rights Reserved.
 %%%
-%%% @doc 
+%%% @doc
 %%% <p>ewgi application behaviour.</p>
 %%%
 %%% @end
@@ -31,11 +31,11 @@
 %% Useful middleware
 -export([module_mw/2, rpc_mw/4, mfa_mw/3]).
 
--include_lib("ewgi.hrl").
+-include("ewgi.hrl").
 
 %% @spec run(Application::ewgi_app(), Context::ewgi_context()) -> Context1::ewgi_context()
 %% @doc Runs an EWGI application with Context and returns the new Context1.
--spec run(ewgi_app(), ewgi_context()) -> ewgi_context().
+-spec run(ewgi_app(), #ewgi{}) -> #ewgi{}.
 run(Application, Context) when is_function(Application, 1) ->
     Application(Context).
 
