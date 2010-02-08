@@ -15,6 +15,7 @@
 -export([socket_server_pair/1, socket_peer_pair/1]).
 -export([ssl_server_pair/1, ssl_peer_pair/1]).
 -export([read_bin_input/1]).
+-export([read_input_bin/2]).
 
 -spec list_to_method(Method::string()) -> ewgi_request_method().
 
@@ -85,3 +86,16 @@ read_bin_input(Body, Callback, {Length, ChunkSz})
     Rem = Length - size(Bin),
     Callback1 = Callback({data, Bin}),
     read_bin_input(Rest, Callback1, {Rem, ChunkSz}).
+
+read_input_bin(L, Ctx) when is_integer(L) ->
+    R = ewgi:read_input(ewgi:req(Ctx)),
+    Iol = R(read_input_bin_cb([]), L),
+    iolist_to_binary(Iol).
+
+read_input_bin_cb(Acc) ->
+    F = fun(eof) ->
+                lists:reverse(Acc);
+           ({data, B}) ->
+                read_input_bin_cb([B|Acc])
+        end,
+    F.
