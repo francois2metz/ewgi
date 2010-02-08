@@ -34,14 +34,15 @@
 -export([new_rsp/0]).
 -export([rsp/1, rsp/2]).
 -export([status/1, status/2]).
--export([rsp_headers/1]).
+-export([rsp_headers/1, rsp_headers/2]).
+-export([get_rsp_header/2]).
 -export([body/1, body/2]).
 
 %% ----------------------------------------------------------------------
 %% General context methods
 
 -spec new() -> #ewgi{}.
-    
+
 new() ->
     #ewgi{req=new_req(), rsp=new_rsp()}.
 
@@ -286,6 +287,19 @@ status({Code, Msg}=Status, #ewgi_rsp{}=R)
 rsp_headers(#ewgi_rsp{headers=H}) ->
     H.
 
+-spec rsp_headers(ewgi_header_list(), #ewgi_rsp{}) -> #ewgi_rsp{}.
+
+rsp_headers(H, #ewgi_rsp{}=R) when is_list(H) ->
+    R#ewgi_rsp{headers=H}.
+
+-spec get_rsp_header(string(), #ewgi_rsp{}) -> string().
+
+get_rsp_header(K0, #ewgi_rsp{headers=H})
+  when is_list(H), is_list(K0) ->
+    K = string:to_lower(K0),
+    {value, {K, V}} = lists:keysearch(K, 1, H),
+    V.
+
 -spec body(#ewgi_rsp{}) -> ewgi_message_body().
 
 body(#ewgi_rsp{body=B}) ->
@@ -296,4 +310,4 @@ body(#ewgi_rsp{body=B}) ->
 body(Body, #ewgi_rsp{}=R)
   when is_list(Body); is_binary(Body); is_function(Body, 0) ->
     R#ewgi_rsp{body=Body}.
-    
+
