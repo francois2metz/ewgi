@@ -56,7 +56,7 @@ yaws_rsp_header("content-type", V, {_Ct, Acc}) ->
     {V, Acc};
 yaws_rsp_header(K, V, {Ct, Acc}) ->
     {Ct, [{header, [K, ": ", V]}|Acc]}.
-    
+
 method(#arg{req=#http_request{method=M}}, _Opts, R) ->
     ewgi:method(M).
 

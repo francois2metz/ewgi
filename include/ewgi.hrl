@@ -90,18 +90,18 @@
 -define(INSPECT_EWGI_RESPONSE(Ctx), Ctx).
 -else.
 -define(INSPECT_EWGI_RESPONSE(Ctx),
-	begin
-	    error_logger:info_msg("Inpecting the final ewgi_response()...~n"
-				  "Requested Url: ~p~n"
-				  "Status: ~p~n"
-				  "Headers: ~p~n"
-				  "Body: ~p~n",
-				  [ewgi:path_info(Ctx),
-				   ewgi:response_status(Ctx),
-				   ewgi:rsp_headers(Ctx),
-				   ewgi:body(Ctx)]),
-	    Ctx
-	end
+        begin
+            error_logger:info_msg("Inpecting the final ewgi_response()...~n"
+                                  "Requested Url: ~p~n"
+                                  "Status: ~p~n"
+                                  "Headers: ~p~n"
+                                  "Body: ~p~n",
+                                  [ewgi:path_info(Ctx),
+                                   ewgi:response_status(Ctx),
+                                   ewgi:rsp_headers(Ctx),
+                                   ewgi:body(Ctx)]),
+            Ctx
+        end
        ).
 -endif.
 
