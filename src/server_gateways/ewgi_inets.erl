@@ -12,7 +12,7 @@
 %% ewgi callbacks
 -export([req/2, rsp/3]).
 
--include("inets/src/httpd.hrl").
+-include_lib("inets/src/httpd.hrl").
 -include("ewgi.hrl").
 
 req(#mod{}=Arg, Opts) ->
@@ -120,7 +120,7 @@ url_scheme(#mod{}, _Opts, R) ->
 server_pair(#mod{socket_type={ssl, _}, socket=Socket}, _Opts, R0) ->
     {Name, Port} = ewgi_util:ssl_server_pair(Socket),
     R = ewgi:server_port(Port, R0),
-    ewgi:server_name(Name, R).
+    ewgi:server_name(Name, R);
 server_pair(#mod{socket=Socket}, _Opts, R0) ->
     {Name, Port} = ewgi_util:socket_server_pair(Socket),
     R = ewgi:server_port(Port, R0),
@@ -129,7 +129,7 @@ server_pair(#mod{socket=Socket}, _Opts, R0) ->
 peer_pair(#mod{socket_type={ssl, _}, socket=Socket}, _Opts, R0) ->
     {Name, Port} = ewgi_util:ssl_peer_pair(Socket),
     R = ewgi:peer_port(Port, R0),
-    ewgi:peer_name(Name, R).
+    ewgi:peer_name(Name, R);
 peer_pair(#mod{socket=Socket}, _Opts, R0) ->
     {Name, Port} = ewgi_util:socket_peer_pair(Socket),
     R = ewgi:peer_port(Port, R0),
