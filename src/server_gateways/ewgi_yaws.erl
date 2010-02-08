@@ -31,7 +31,7 @@ req(#arg{}=Arg, Opts) ->
 
 -spec rsp(Arg::term(), Opts::list(), Rsp::#ewgi_rsp{}) -> any().
 
-rsp(Arg, Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
+rsp(_Arg, _Opts, Rsp) when is_record(Rsp, ewgi_rsp) ->
     {Code, _Msg} = ewgi:status(Rsp),
     Headers = ewgi:rsp_headers(Rsp),
     {Ct, Hdrs} = yaws_rsp_headers(Headers),
@@ -57,16 +57,16 @@ yaws_rsp_header("content-type", V, {_Ct, Acc}) ->
 yaws_rsp_header(K, V, {Ct, Acc}) ->
     {Ct, [{header, [K, ": ", V]}|Acc]}.
 
-method(#arg{req=#http_request{method=M}}, _Opts, R) ->
+method(#arg{req=#http_request{method=M}}, _Opts, _R) ->
     ewgi:method(M).
 
-script_name(#arg{prepath=V}, _Opts, R) ->
+script_name(#arg{prepath=V}, _Opts, _R) ->
     ewgi:script_name(V).
 
-path(#arg{pathinfo=undefined, query_data=Q}, _Opts, R0) ->
+path(#arg{pathinfo=undefined, querydata=Q}, _Opts, R0) ->
     R = ewgi:path_info("/", R0),
     ewgi:query_string(Q, R);
-path(#arg{pathinfo=P, query_data=Q}, _Opts, R0) ->
+path(#arg{pathinfo=P, querydata=Q}, _Opts, R0) ->
     R = ewgi:path_info(P, R0),
     ewgi:query_string(Q, R).
 
