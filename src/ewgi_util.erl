@@ -9,6 +9,8 @@
 
 -module(ewgi_util).
 
+-include("ewgi.hrl").
+
 -export([list_to_method/1]).
 -export([socket_server_pair/1, socket_peer_pair/1]).
 -export([ssl_server_pair/1, ssl_peer_pair/1]).
