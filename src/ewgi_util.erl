@@ -88,7 +88,7 @@ read_bin_input(Body, Callback, {Length, ChunkSz})
     read_bin_input(Rest, Callback1, {Rem, ChunkSz}).
 
 read_input_bin(L, Ctx) when is_integer(L) ->
-    R = ewgi:read_input(ewgi:req(Ctx)),
+    R = ewgi:input(ewgi:req(Ctx)),
     Iol = R(read_input_bin_cb([]), L),
     iolist_to_binary(Iol).
 
