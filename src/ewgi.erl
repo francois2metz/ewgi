@@ -230,6 +230,8 @@ get_header_merged(Name, T) when is_list(Name) ->
 
 merge([], Acc) ->
     Acc;
+merge([{_K, V}], []) ->
+    V;
 merge([{_K, V}|T], Acc) ->
     merge(T, Acc ++ ", " ++ V).
 
