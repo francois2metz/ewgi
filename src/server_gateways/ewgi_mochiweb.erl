@@ -15,7 +15,7 @@
 -include("ewgi.hrl").
 
 -spec req(MochiReq::tuple(), Opts::list()) -> #ewgi_req{}.
-    
+
 req(MochiReq, Opts) ->
     R = ewgi:new_req(),
     Folder = fun(F, Req) -> F(MochiReq, Opts, Req) end,
@@ -87,8 +87,8 @@ server_pair(MochiReq, _Opts, R0) ->
 
 peer_pair(MochiReq, _Opts, R0) ->
     {Name, Port} = ewgi_util:socket_peer_pair(MochiReq:get(socket)),
-    R = ewgi:server_port(Port, R0),
-    ewgi:server_name(Name, R).
+    R = ewgi:peer_port(Port, R0),
+    ewgi:peer_name(Name, R).
 
 headers(MochiReq, _Opts, R0) ->
     MochiHdrs = MochiReq:get(headers),
