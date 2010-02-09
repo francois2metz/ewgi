@@ -71,7 +71,8 @@ path_fold('*', R0) ->
     R = ewgi:path_info("*", R0),
     ewgi:query_string([], R);
 path_fold(Raw, R0) ->
-    {Path, Query, _Frag} = mochiweb_util:urlsplit_path(Raw),
+    {Path0, Query, _Frag} = mochiweb_util:urlsplit_path(Raw),
+    Path = mochiweb_util:unquote(Path0),
     R = ewgi:path_info(Path, R0),
     ewgi:query_string(Query, R).
 
