@@ -32,7 +32,11 @@
 		stream_process_end/2
 	]).
 
+-ifdef(HAS_R14).
+-include_lib("inets/src/http_server/httpd.hrl").
+-else.
 -include_lib("inets/src/httpd.hrl").
+-endif.
 -include_lib("ewgi.hrl").
 
 do(A) ->
