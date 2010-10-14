@@ -12,7 +12,11 @@
 %% ewgi callbacks
 -export([req/2, rsp/3]).
 
+-ifdef(HAS_R14).
+-include_lib("inets/src/http_server/httpd.hrl").
+-else.
 -include_lib("inets/src/httpd.hrl").
+-endif.
 -include("ewgi.hrl").
 
 req(#mod{}=Arg, Opts) ->
