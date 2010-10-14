@@ -110,7 +110,7 @@ url_scheme(#ewgi_req{url_scheme=V}) ->
 url_scheme(Scheme, #ewgi_req{}=R) when is_list(Scheme) ->
     R#ewgi_req{url_scheme=Scheme}.
 
--spec script_name(#ewgi_req{}) -> string().
+-spec script_name(#ewgi_req{}) -> string() | undefined.
 
 script_name(#ewgi_req{script_name=V}) ->
     V.
@@ -120,7 +120,7 @@ script_name(#ewgi_req{script_name=V}) ->
 script_name(Name, #ewgi_req{}=R) when is_list(Name) ->
     R#ewgi_req{script_name=Name}.
 
--spec path_info(#ewgi_req{}) -> string().
+-spec path_info(#ewgi_req{}) -> string() | undefined.
 
 path_info(#ewgi_req{path_info=V}) ->
     V.
@@ -130,7 +130,7 @@ path_info(#ewgi_req{path_info=V}) ->
 path_info(P, #ewgi_req{}=R) when is_list(P) ->
     R#ewgi_req{path_info=P}.
 
--spec query_string(#ewgi_req{}) -> string().
+-spec query_string(#ewgi_req{}) -> string() | undefined.
 
 query_string(#ewgi_req{query_string=V}) ->
     V.
