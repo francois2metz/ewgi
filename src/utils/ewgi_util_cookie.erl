@@ -167,7 +167,7 @@ simple_cookie(Name, Val, Path, Sec) when is_list(Name), is_list(Val), is_list(Pa
     Exp = case Val of [] -> ?COOKIE_DELETE_TRAILER; _ -> [] end,
     {"Set-Cookie", [Name, $=, Val, "; Path=", Path, S, Exp]}.
 
--spec simple_cookie(string(), binary() | string(), boolean(), binary() | string(), string()) -> {string(), iolist()}.
+-spec simple_cookie(string(), binary() | string(), string(), boolean(), binary()| string()) -> {string(), iolist()}.
 simple_cookie(Name, Val, Path, Sec, Domain) when is_binary(Val) ->
     simple_cookie(Name, binary_to_list(Val), Path, Sec, Domain);
 simple_cookie(Name, Val, Path, Sec, Domain) when is_binary(Domain) ->

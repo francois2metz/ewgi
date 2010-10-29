@@ -112,7 +112,7 @@ headers(#arg{headers=H}, _Opts, R0) ->
 
 input(#arg{clidata=D}, _Opts, R) ->
     F = ewgi_util:read_bin_input(D),
-    ewgi:read_input(F, R).
+    ewgi:input(F, R).
 
 errors(#arg{}, _Opts, R) ->
     ewgi:errors(fun error_logger:error_report/1, R).
