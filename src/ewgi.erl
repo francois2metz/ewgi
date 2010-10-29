@@ -220,7 +220,7 @@ get_header(Name0, T) ->
         {value, L} when is_list(L) -> L
     end.
 
--spec get_req_header_merged(string(), #ewgi_req{}) -> string().
+-spec get_req_header_merged(string(), #ewgi_req{}) -> string() | undefined.
 
 get_req_header_merged(K, #ewgi_req{headers=T}) ->
     get_header_merged(K, T).
