@@ -53,36 +53,36 @@ get_all_values(Ctx) ->
     ewgi_api:find_data(?SESSION_DATA, Ctx).
 
 get_value(Key, Ctx) ->
-	get_value(Key, Ctx, undefined).
-	
+    get_value(Key, Ctx, undefined).
+
 get_value(Key, Ctx, Default) ->
-	case ewgi_api:find_data(?SESSION_DATA, Ctx) of
-		undefined ->
-			Default;
-		Data ->
-			proplists:get_value(Key, Data, Default)
-	end.
+    case ewgi_api:find_data(?SESSION_DATA, Ctx) of
+        undefined ->
+            Default;
+        Data ->
+            proplists:get_value(Key, Data, Default)
+    end.
 
 set_value(Key, Value, Ctx) ->
     Data = ewgi_api:find_data(?SESSION_DATA, Ctx),
     Data1 =
-	case proplists:is_defined(Key, Data) of
-	    true ->
-		Rest = proplists:delete(Key, Data),
-		[{Key, Value}|Rest];
-	    false ->
-		[{Key, Value}|Data]
-	end,
+        case proplists:is_defined(Key, Data) of
+            true ->
+                Rest = proplists:delete(Key, Data),
+                [{Key, Value}|Rest];
+            false ->
+                [{Key, Value}|Data]
+        end,
     update_session_data(Ctx, Data1).
 
 delete(Key, Ctx) ->
     Data = ewgi_api:find_data(?SESSION_DATA, Ctx),
     case proplists:is_defined(Key, Data) of
-	true ->
-	    Data1 = proplists:delete(Key, Data),
-	    update_session_data(Ctx, Data1);
-	false ->
-	    Ctx
+        true ->
+            Data1 = proplists:delete(Key, Data),
+            update_session_data(Ctx, Data1);
+        false ->
+            Ctx
     end.
 
 %%====================================================================
@@ -93,12 +93,12 @@ session_updated(Ctx) ->
 
 init_session(Ctx, Session, Timeout, IncludeIp) when is_record(Session, session) ->
     case validate_session(Ctx, Session, Timeout, IncludeIp) of
-	{error, _Reason} ->
-	    invalid_session;
-	ValidSession ->
-	    SessionData = ValidSession#session.data,
-	    Ctx1 = ewgi_api:store_data(?SESSION_DATA, SessionData, Ctx),
-	    ewgi_api:store_data(?SESSION_STATE, loaded, Ctx1)
+        {error, _Reason} ->
+            invalid_session;
+        ValidSession ->
+            SessionData = ValidSession#session.data,
+            Ctx1 = ewgi_api:store_data(?SESSION_DATA, SessionData, Ctx),
+            ewgi_api:store_data(?SESSION_STATE, loaded, Ctx1)
     end;
 init_session(_, _, _, _) ->
     invalid_session.
@@ -107,21 +107,21 @@ validate_session(Ctx, Session, Timeout, IncludeIp) ->
     ExpireTime = Session#session.timestamp + Timeout,
     Expired = ewgi_util_calendar:now_utc_ts_ms() >= ExpireTime,
     if Expired ->
-	    {error, session_timeout};
+            {error, session_timeout};
        true ->
-	    case IncludeIp of
-		false ->
-		    Session;
-		true ->
-		    Addr = ewgi_api:remote_addr(Ctx),
-		    SavedAddr = Session#session.ip_address,
-		    if SavedAddr =:= Addr ->
-			    Session;
-		       true ->
-			    error_logger:error_msg("Saved address: ~p, New address: ~p", [SavedAddr, Addr]),
-			    {error, invalid_ip_address}
-		    end
-	    end
+            case IncludeIp of
+                false ->
+                    Session;
+                true ->
+                    Addr = ewgi_api:remote_addr(Ctx),
+                    SavedAddr = Session#session.ip_address,
+                    if SavedAddr =:= Addr ->
+                            Session;
+                       true ->
+                            error_logger:error_msg("Saved address: ~p, New address: ~p", [SavedAddr, Addr]),
+                            {error, invalid_ip_address}
+                    end
+            end
     end.
 
 get_session(Ctx, IncludeIp) ->
@@ -129,10 +129,10 @@ get_session(Ctx, IncludeIp) ->
     Timestamp = ewgi_util_calendar:now_utc_ts_ms(),
     Session0 = #session{data=SessionData, timestamp=Timestamp},
     if IncludeIp ->
-	    Addr = ewgi_api:remote_addr(Ctx),
-	    Session0#session{ip_address=Addr};
+            Addr = ewgi_api:remote_addr(Ctx),
+            Session0#session{ip_address=Addr};
        true ->
-	    Session0
+            Session0
     end.
 
 %%====================================================================
@@ -140,15 +140,15 @@ get_session(Ctx, IncludeIp) ->
 %%====================================================================
 session_create_app(Ctx) ->
     case ?MODULE:get_value(name, Ctx) of
-	undefined ->
-	    Name = "Bill",
-	    Body = ["Hello stranger! I'll call you ", Name, " from now on! (please refresh the page)"],
-	    Ctx1 = ?MODULE:set_value(name, "Bill", Ctx);
-	Name ->
-	    Body = ["Hello ", Name, "! Nice to see you again! "
-		    "(no point in reloading again, delete the session by "
-		    "adding /delete to the current url)"],
-	    Ctx1 = Ctx
+        undefined ->
+            Name = "Bill",
+            Body = ["Hello stranger! I'll call you ", Name, " from now on! (please refresh the page)"],
+            Ctx1 = ?MODULE:set_value(name, "Bill", Ctx);
+        Name ->
+            Body = ["Hello ", Name, "! Nice to see you again! "
+                    "(no point in reloading again, delete the session by "
+                    "adding /delete to the current url)"],
+            Ctx1 = Ctx
     end,
     Headers = [{"Content-type", "text/plain"}] ++ ewgi_api:response_headers(Ctx1),
     Ctx2 = ewgi_api:response_headers(Headers, Ctx1),
@@ -158,7 +158,7 @@ session_create_app(Ctx) ->
 session_delete_app(Ctx) ->
     Ctx1 = ?MODULE:delete_session(Ctx),
     ewgi_api:response_message_body("Deleted session!",
-				   ewgi_api:response_status({200, "OK"}, Ctx1)).
+                                   ewgi_api:response_status({200, "OK"}, Ctx1)).
 
 %%====================================================================
 %% Internal functions

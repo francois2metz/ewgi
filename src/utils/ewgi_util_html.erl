@@ -22,7 +22,7 @@
 %% @doc Replace the special characters '&lt;', '&gt;', '&amp;', and '&quot;'
 %% to HTML entity sequences.
 -spec(escape/1 :: (binary() | string()) -> binary() | string()).
-             
+
 escape(Bin) when is_binary(Bin) ->
     list_to_binary(escape(binary_to_list(Bin), []));
 escape(S) when is_list(S) ->

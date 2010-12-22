@@ -37,9 +37,9 @@
 %% @spec parse_cookie(string()) -> [{K::string(), V::string()}]
 %% @doc Parse the contents of a Cookie header field, ignoring cookie
 %% attributes, and return a simple property list.
-parse_cookie("") -> 
+parse_cookie("") ->
     [];
-parse_cookie(Cookie) -> 
+parse_cookie(Cookie) ->
     parse_cookie(Cookie, []).
 
 %% @spec test() -> ok
@@ -51,8 +51,8 @@ test() ->
 %% Internal API
 
 parse_cookie([], Acc) ->
-    lists:reverse(Acc); 
-parse_cookie(String, Acc) -> 
+    lists:reverse(Acc);
+parse_cookie(String, Acc) ->
     {{Token, Value}, Rest} = read_pair(String),
     Acc1 = case Token of
                [] ->
@@ -91,7 +91,7 @@ read_quoted([$\\, Any | Rest], Acc) ->
     read_quoted(Rest, [Any | Acc]);
 read_quoted([C | Rest], Acc) ->
     read_quoted(Rest, [C | Acc]).
-    
+
 skip_whitespace(String) ->
     F = fun (C) -> ?IS_WHITESPACE(C) end,
     lists:dropwhile(F, String).
@@ -100,7 +100,7 @@ read_token(String) ->
     F = fun (C) -> not ?IS_SEPARATOR(C) end,
     lists:splitwith(F, String).
 
-skip_past_separator([]) ->    
+skip_past_separator([]) ->
     [];
 skip_past_separator([$; | Rest]) ->
     Rest;
@@ -110,8 +110,8 @@ skip_past_separator([_ | Rest]) ->
     skip_past_separator(Rest).
 
 parse_cookie_test() ->
-    %% RFC example
-    C1 = "$Version=\"1\"; Customer=\"WILE_E_COYOTE\"; $Path=\"/acme\"; 
+%% RFC example
+    C1 = "$Version=\"1\"; Customer=\"WILE_E_COYOTE\"; $Path=\"/acme\";
     Part_Number=\"Rocket_Launcher_0001\"; $Path=\"/acme\";
     Shipping=\"FedEx\"; $Path=\"/acme\"",
     [
@@ -119,7 +119,7 @@ parse_cookie_test() ->
      {"Part_Number","Rocket_Launcher_0001"},
      {"Shipping","FedEx"}
     ] = parse_cookie(C1),
-    %% Potential edge cases
+%% Potential edge cases
     [{"foo", "x"}] = parse_cookie("foo=\"\\x\""),
     [] = parse_cookie("="),
     [{"foo", ""}, {"bar", ""}] = parse_cookie("  foo ; bar  "),
@@ -134,9 +134,9 @@ parse_cookie_test() ->
 cookie_headers(Ctx, CookieName, CookieVal, Path, Sec) ->
     {CurDomain, WildDomain} = get_domains(Ctx),
     SessionHeaders =
-	[simple_cookie(CookieName, CookieVal, Path, Sec),
-	 simple_cookie(CookieName, CookieVal, Path, Sec, CurDomain),
-	 simple_cookie(CookieName, CookieVal, Path, Sec, WildDomain)],
+        [simple_cookie(CookieName, CookieVal, Path, Sec),
+         simple_cookie(CookieName, CookieVal, Path, Sec, CurDomain),
+         simple_cookie(CookieName, CookieVal, Path, Sec, WildDomain)],
     OldHeaders = ewgi_api:response_headers(Ctx),
     Headers = SessionHeaders ++ remove_cookie_headers(CookieName, OldHeaders, []),
     ewgi_api:response_headers(Headers, Ctx).

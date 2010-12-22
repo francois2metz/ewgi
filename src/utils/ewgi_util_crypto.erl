@@ -53,16 +53,16 @@ encode(<<Key:16/binary>>, Data, MaxSize) when MaxSize > 0, is_binary(Data) ->
     end;
 encode(_Key, _, _) ->
     {error, invalid_key}.
-    
+
 %% @spec decode(Key::binary(), Cookie::binary()) -> binary() | {error, Reason::atom()}
 %% @doc Checks the signature and timeout and decrypts the cookie if it is valid.
 -spec decode(binary(), binary()) -> binary() | {error, atom()}.
 decode(<<Key:16/binary>>, <<HMACSignature:20/binary, IV:16/binary, DataCrypted/bits>>) ->
     case crypto:sha_mac(Key, <<IV:16/binary, DataCrypted/bits>>) of
         HMACSignature ->
-	    DataCompressed = crypto:aes_cfb_128_decrypt(Key, IV, DataCrypted),
-	    Data = zlib:unzip(DataCompressed),
-	    Data;
+            DataCompressed = crypto:aes_cfb_128_decrypt(Key, IV, DataCrypted),
+            Data = zlib:unzip(DataCompressed),
+            Data;
         _ ->
             {error, data_tampered}
     end;

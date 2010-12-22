@@ -11,29 +11,29 @@
 -define(ENCODABLE, ["text/plain", "text/html", "text/xml"]).
 
 run(Ctx, []) ->
-    %% get the accept encoding header
+    % get the accept encoding header
     AcceptEnc = ewgi_api:get_header_value("accept-encoding", Ctx),
     Hdrs = ewgi_api:response_headers(Ctx),
-    %% check gzip/deflate
+    % check gzip/deflate
     Ctx1 = case can_encode_response(Hdrs) of
                true ->
                    case parse_encoding(AcceptEnc) of
                        false ->
                            Ctx;
                        gzip ->
-                           %% FIXME: does not work if response_message_body streams a file
+                           % FIXME: does not work if response_message_body streams a file
                            Body1 = zlib:gzip(ewgi_api:response_message_body(Ctx)),
                            Hdrs1 = [{"Content-encoding", "gzip"}|Hdrs],
                            ewgi_api:response_headers(
-                             Hdrs1, 
+                             Hdrs1,
                              ewgi_api:response_message_body(Body1, Ctx)
                             );
                        deflate ->
-                           %% FIXME: does not work if response_message_body streams a file
+                           % FIXME: does not work if response_message_body streams a file
                            Body1 = zlib:compress(ewgi_api:response_message_body(Ctx)),
                            Hdrs1 = [{"Content-encoding", "deflate"}|Hdrs],
                            ewgi_api:response_headers(
-                             Hdrs1, 
+                             Hdrs1,
                              ewgi_api:response_message_body(Body1, Ctx)
                             )
                    end;
@@ -50,13 +50,13 @@ can_encode_response(Headers) ->
 can_encode_response1(ContentType, undefined) ->
     lists:member(ContentType, ?ENCODABLE);
 can_encode_response1(_ContentType, _ContentEncoding) ->
-    %% the response is already encoded in some way so we don't do anything
+    % the response is already encoded in some way so we don't do anything
     false.
 
 parse_encoding(undefined) ->
     false;
 parse_encoding(Encoding) ->
-    %% FIXME: read HTTP specs to see how to do this properly (e.g. check the q=X and the order)
+    % FIXME: read HTTP specs to see how to do this properly (e.g. check the q=X and the order)
     case string:str(Encoding, "gzip") of
         X when X>0 ->
             gzip;

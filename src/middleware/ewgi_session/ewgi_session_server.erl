@@ -47,7 +47,7 @@ get_session(Server, Sid) ->
 
 save_new_session(Server, Data) ->
     gen_server:call(Server, {save_new_session, Data}).
-	
+
 save_session(Server, Sid, Data) ->
     gen_server:call(Server, {save_session, Sid, Data}).
 
@@ -71,15 +71,15 @@ init([]) ->
 
 handle_call({get_session, Sid}, _From, _State) ->
     Data = case ets:lookup(?MODULE, Sid) of
-	       [{_,Session}] ->
-		   Session;
-	       [] ->
-		   undefined
-	   end,
+               [{_,Session}] ->
+                   Session;
+               [] ->
+                   undefined
+           end,
     {reply, Data, undefined};
 
 handle_call({save_new_session, Session}, _From, _State) ->
-	NewSid = make_session_id(),	
+    NewSid = make_session_id(),
     ets:insert(?MODULE, {NewSid,Session}),
     {reply, NewSid, undefined};
 
@@ -95,7 +95,7 @@ handle_call({delete_session, Sid}, _From, _State) ->
 handle_call({purge_state_sessions, Timeout}, _From, _State) ->
     MinCreationDate = ewgi_util_calendar:now_utc_ts_ms() - Timeout,
     Pattern =
-	ets:fun2ms(fun({_,#session{timestamp=Timestamp}}=A) -> Timestamp =< MinCreationDate end),
+        ets:fun2ms(fun({_,#session{timestamp=Timestamp}}=A) -> Timestamp =< MinCreationDate end),
     NumDeleted = ets:select_delete(?MODULE, Pattern),
     {reply, {num_deleted, NumDeleted}, undefined}.
 
@@ -126,12 +126,12 @@ make_session_id() ->
 
 %% Convert Integer from the SHA to Hex
 list_to_hex(L)->
-	[int_to_hex(X) || X <- L].
- 
-int_to_hex(N) when N < 256 -> 
-	[hex(N div 16), hex(N rem 16)].
- 
+    [int_to_hex(X) || X <- L].
+
+int_to_hex(N) when N < 256 ->
+    [hex(N div 16), hex(N rem 16)].
+
 hex(N) when N < 10 ->
-       $0+N;
+    $0+N;
 hex(N) when N >= 10, N < 16 ->
-       $a + (N-10).
+    $a + (N-10).

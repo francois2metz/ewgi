@@ -15,7 +15,7 @@
 %%% srl. Portions created by S.G. Consulting s.r.l. are Copyright (C)
 %%% 2007 S.G. Consulting srl. All Rights Reserved.
 %%%
-%%% @doc 
+%%% @doc
 %%% <p>ewgi test applications</p>
 %%%
 %%% @end
