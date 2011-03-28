@@ -48,8 +48,7 @@ Cheers to `Geoff Cant`_ for writing this example.
         mochiweb_http:stop(ewex).
     
     loop(Req) ->
-        Mod = ewgi_mochiweb:new(fun ?MODULE:simple_app/1),
-        Mod:run(Req).
+        ewgi_mochiweb:run(fun ?MODULE:simple_app/1, Req).
    
     simple_app({ewgi_context, Request, _Response}) ->
         ResponseHeaders = [{"Content-type", "text/plain"}],
